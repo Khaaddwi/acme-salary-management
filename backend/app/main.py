@@ -21,7 +21,10 @@ from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 
 from .database import init_db
-from .routers import analytics, employees
+from .routers import analytics, employees, ask, meta
+
+from dotenv import load_dotenv
+load_dotenv()
 
 
 # Lifespan: init DB on startup
@@ -57,6 +60,8 @@ app.add_middleware(
 
 app.include_router(employees.router, prefix="/api")
 app.include_router(analytics.router, prefix="/api")
+app.include_router(meta.router, prefix="/api")
+app.include_router(ask.router, prefix="/api")
 
 # Static frontend
 
