@@ -5,7 +5,6 @@ All schema, connection helpers, and init logic live here.
 
 import os
 import aiosqlite
-from contextlib import asynccontextmanager
 
 DB_PATH = os.environ.get("DB_PATH", os.path.join(os.path.dirname(__file__), "..", "salary.db"))
 
@@ -50,7 +49,6 @@ CREATE INDEX IF NOT EXISTS idx_history_employee_id   ON salary_history(employee_
 """
 
 
-@asynccontextmanager
 async def get_db():
     """Async context manager that yields a configured aiosqlite connection."""
     async with aiosqlite.connect(DB_PATH) as db:
