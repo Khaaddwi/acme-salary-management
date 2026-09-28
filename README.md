@@ -1,98 +1,32 @@
 # ACME Salary Management System
 
-HR salary management system for 10,000 employees across multiple countries.
+HR salary management for 10,000 employees across multiple countries — built with **FastAPI + React**.
 
-**Stack:** FastAPI · SQLite · React · Groq (Llama3)
+## Quick start
 
----
-
-## Setup
-
-### 1. Install dependencies
 ```bash
 cd backend
+
+# 1. Install dependencies
 pip install -r requirements.txt
-```
 
-### 2. Seed the database
-```bash
+# 2. Seed the database (10,000 employees, ~2 seconds)
 python seed.py
-```
 
-### 3. Get a free Groq API key
-- Go to **console.groq.com**
-- Sign up — free, no credit card needed
-- Create an API key
-
-### 4. Start the server
-```bash
-# Windows
-set GROQ_API_KEY=gsk_your-key-here
+# 3. Start the API server
 uvicorn app.main:app --reload --port 8000
 
-# Mac/Linux
-export GROQ_API_KEY=gsk_your-key-here
-uvicorn app.main:app --reload --port 8000
+# 4. Open the app
+open http://localhost:8000          # React UI
+open http://localhost:8000/docs     # Swagger API docs (auto-generated)
+open http://localhost:8000/redoc    # ReDoc API docs
 ```
 
-### 5. Open the app
-````
-
-[http://localhost:8000](http://localhost:8000)        → React UI\
-      [http://localhost:8000/docs](http://localhost:8000/docs)   → Swagger API docs\
-      [http://localhost:8000/redoc](http://localhost:8000/redoc)  → ReDoc API docs
-```
+> Set `ANTHROPIC_API_KEY=sk-ant-...` in your env to enable the AI Q&A feature.
 
 ---
 
-## Project Structure
-```
-
-salary-mgmt/\
-      ├── backend/\
-      │   ├── app/\
-      │   │   ├── main.py          # FastAPI app entry point\
-      │   │   ├── database.py      # SQLite schema and connection\
-      │   │   ├── schemas.py       # Pydantic v2 request/response models\
-      │   │   ├── analytics.py     # Dashboard query functions\
-      │   │   └── routers/\
-      │   │       ├── employees.py # Employee CRUD and CSV export\
-      │   │       ├── analytics.py # Dashboard analytics endpoints\
-      │   │       ├── meta.py      # Filter dropdown values\
-      │   │       └── ask.py       # AI natural language Q&A (Groq)\
-      │   ├── tests/\
-      │   │   ├── test_seed.py     # Seed generation tests\
-      │   │   └── test_api.py      # API integration tests\
-      │   ├── seed.py              # Generates 10,000 employees\
-      │   └── requirements.txt\
-      ├── frontend/\
-      │   └── src/                 # React source files\
-      └── docs/\
-      └── REQUIREMENTS.md
-````
-
----
-
-## API Endpoints
-
-| Method | Route | Description |
-|--------|-------|-------------|
-| GET | `/api/employees` | List with pagination, search, filters, sort |
-| GET | `/api/employees/export` | Download filtered CSV |
-| GET | `/api/employees/{id}` | Employee detail + salary history |
-| PUT | `/api/employees/{id}/salary` | Update salary with audit record |
-| GET | `/api/analytics/summary` | Headcount, payroll, avg salary |
-| GET | `/api/analytics/departments` | Per department breakdown |
-| GET | `/api/analytics/countries` | Per country breakdown |
-| GET | `/api/analytics/levels` | Per job level breakdown |
-| GET | `/api/analytics/bands` | Salary band distribution |
-| GET | `/api/analytics/employment-types` | Employment type breakdown |
-| GET | `/api/meta/filters` | Dropdown filter values |
-| POST | `/api/ask` | AI natural language Q&A |
-
----
-
-## Run Tests
+## Run tests
 
 ```bash
 cd backend
@@ -100,11 +34,79 @@ pip install pytest pytest-asyncio httpx
 pytest tests/ -v
 ```
 
+The test suite covers:
+- **Seed generation** — 20 tests: ID format, email uniqueness, salary modifiers, FX conversion, determinism
+- **API routes** — 40+ tests: all filters, sort, pagination, salary update & history, CSV export, analytics, CORS, OpenAPI schema
+
 ---
 
-## Notes
+## Project structure
 
-- `GROQ_API_KEY` is only needed for the Ask HR Data feature
-- Everything else works without it
-- Get free key at console.groq.com — no credit card needed
-````
+```
+salary-mgmt/
+├── backend/
+│   ├── app/
+│   │   ├── main.py          # FastAPI app, lifespan, middleware, router wiring
+│   │   ├── database.py      # aiosqlite connection, schema, init_db()
+│   │   ├── schemas.py       # Pydantic v2 request/response models
+│   │   ├── analytics.py     # Async analytics query functions
+│   │   └── routers/
+│   │       ├── employees.py # GET/PUT employees, export CSV
+│   │       ├── analytics.py # Dashboard analytics endpoints
+│   │       ├── meta.py      # Filter dropdown metadata
+│   │       └── ask.py       # AI natural language Q&A
+│   ├── tests/
+│   │   ├── test_seed.py     # Seed generation tests (pytest)
+│   │   └── test_api.py      # API integration tests (TestClient)
+│   ├── static/              # Compiled React app (app.js, styles.css, index.html)
+│   ├── seed.py              # 10,000-employee seed script
+│   ├── requirements.txt
+│   └── pytest.ini
+├── frontend/
+│   └── src/                 # React source (JSX + CSS)
+└── docs/
+    ├── REQUIREMENTS.md
+    ├── ARCHITECTURE.md
+    └── AI_USAGE_LOG.md
+```
+
+---
+
+## API overview
+
+| Method | Route | Description |
+|--------|-------|-------------|
+| GET | `/api/employees` | List with pagination, search, 7 filters, sort |
+| GET | `/api/employees/export` | Filtered CSV download |
+| GET | `/api/employees/{id}` | Employee detail + salary history |
+| PUT | `/api/employees/{id}/salary` | Update salary (Pydantic-validated, creates audit record) |
+| GET | `/api/analytics/summary` | Headcount, total payroll, avg salary |
+| GET | `/api/analytics/departments` | Per-department breakdown |
+| GET | `/api/analytics/countries` | Per-country breakdown |
+| GET | `/api/analytics/levels` | Per-job-level breakdown |
+| GET | `/api/analytics/bands` | Salary band distribution |
+| GET | `/api/analytics/employment-types` | Full-time / PT / contractor split |
+| GET | `/api/meta/filters` | Distinct values for all filter dropdowns |
+| POST | `/api/ask` | Natural language Q&A (requires ANTHROPIC_API_KEY) |
+| GET | `/docs` | Swagger UI (auto-generated by FastAPI) |
+| GET | `/redoc` | ReDoc (auto-generated by FastAPI) |
+
+---
+
+## Why FastAPI
+
+- **Pydantic v2 validation** — all request bodies and responses are validated automatically; invalid inputs return structured 422 errors with field-level detail
+- **Auto-generated OpenAPI docs** — `/docs` and `/redoc` come free, giving the assessment reviewers a live, interactive API explorer
+- **Async I/O** — `aiosqlite` for non-blocking database access; `asynccontextmanager` for clean dependency injection via `Depends(get_db)`
+- **Type safety** — full Python type annotations throughout; `Literal["asc", "desc"]` on sort direction, `Field(gt=0)` on salary values
+
+## Key engineering decisions
+
+| Decision | Choice | Why |
+|----------|--------|-----|
+| Database | SQLite + aiosqlite | Zero setup, async, sufficient for 10k rows |
+| Validation | Pydantic v2 | Field-level errors, `field_validator`, auto docs |
+| Sort injection guard | Whitelist set (`SORT_WHITELIST`) | Prevents column name injection; silent fallback to `name` |
+| FX rates | Stored at seed time | Avoids live API dependency; re-derived on update |
+| AI Q&A | SELECT-only guard before execution | Schema-only context sent to model; no user data in prompt |
+| Tests | FastAPI `TestClient` + isolated in-memory DB | Fast, deterministic, no real DB touched |
