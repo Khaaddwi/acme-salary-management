@@ -1,0 +1,15 @@
+{
+  "name": "salary-mgmt-frontend",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "build": "esbuild src/index.jsx --bundle --outfile=../backend/static/app.js --loader:.jsx=jsx --jsx=automatic --define:process.env.NODE_ENV='\"production\"'"
+  },
+  "dependencies": {
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
+  },
+  "devDependencies": {
+    "esbuild": "^0.25.0"
+  }
+}
